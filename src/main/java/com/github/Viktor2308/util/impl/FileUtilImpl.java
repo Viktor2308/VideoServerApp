@@ -40,7 +40,10 @@ public class FileUtilImpl implements FileUtil {
             dir.mkdirs();
         }
 
-        String location = new StringBuilder(path).append(File.separator).append(fileName).toString();
+        String location = new StringBuilder(path)
+                .append(File.separator)
+                .append(fileName)
+                .toString();
 
         Path rezultPath = Paths.get(location);
 
