@@ -1,10 +1,7 @@
 package com.github.Viktor2308.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.sql.Timestamp;
@@ -18,7 +15,10 @@ import java.sql.Timestamp;
 public class VideoInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true)
     private long id;
+    @Column(name = "author", nullable = false)
+    private String author;
     private String videoName;
     public String videoExtension;
     private String videoPath;

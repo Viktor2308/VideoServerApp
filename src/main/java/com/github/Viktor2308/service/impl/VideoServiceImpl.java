@@ -1,23 +1,28 @@
 package com.github.Viktor2308.service.impl;
 
 import com.github.Viktor2308.entity.VideoInfo;
+import com.github.Viktor2308.exception.DuplicateVideoException;
 import com.github.Viktor2308.exception.NotFoundVideoException;
 import com.github.Viktor2308.repository.VideoInfoRepository;
+import com.github.Viktor2308.service.UserService;
 import com.github.Viktor2308.service.VideoService;
 import com.github.Viktor2308.util.FileUtil;
+import com.github.Viktor2308.util.ValidationFile;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 
-import static org.springframework.http.ResponseEntity.ok;
 
 @Service
 @AllArgsConstructor
@@ -26,12 +31,20 @@ public class VideoServiceImpl implements VideoService {
 
     private final FileUtil fileUtil;
     private final VideoInfoRepository repository;
+    private final UserService userService;
+    private final ValidationFile validationFile;
 
     @Override
     @Transactional
     public VideoInfo createVideo(MultipartFile video) throws IOException {
+
+        if(validationFile.validationFileAlreadyExist(video)){
+            throw new DuplicateVideoException("Video is already exist!");
+        }
+
         VideoInfo info = VideoInfo.builder()
                 .videoName(fileUtil.getFileName(video))
+                .author(userService.getCurrentUsername())
                 .videoExtension(fileUtil.getFileExtension(video))
                 .videoSize(video.getSize())
                 .write(false)
@@ -44,24 +57,33 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public ResponseEntity<?> getVideoById(long id) {
+    public Resource getVideoResourceById(long id) {
         VideoInfo info = repository.findById(id).orElseThrow(() ->
-                new NotFoundVideoException("Video not found with id: "+ id));
+                new NotFoundVideoException("Video not found with id: " + id));
 
         if (!info.isWrite()) {
-            return new ResponseEntity<>(HttpStatus.LOCKED);
+            log.error("Error: File is not upload!");
+            throw new RuntimeException("File is not upload!");
         }
 
-        String path = info.getVideoPath();
-
+        Path video = Path.of(info.getVideoPath());
         try {
-            byte[] video = fileUtil.getFile(path);
-            return ok(video);
-
-        } catch (IOException e) {
-            log.error("Error download!");
-            e.printStackTrace();
+            Resource resource = new UrlResource(video.toUri());
+            if (resource.exists() || resource.isReadable()) {
+                return resource;
+            } else {
+                log.error("Error: Could not read the file!");
+                throw new RuntimeException("Could not read the file.");
+            }
+        } catch (MalformedURLException e) {
+            log.error("Error: {}", e.getMessage());
+            throw new RuntimeException("Error:" + e.getMessage());
         }
-        return (ResponseEntity<?>) ok();
+    }
+
+    @Override
+    public List<VideoInfo> getAllMyVideo() {
+        String author = userService.getCurrentUsername();
+        return repository.findAllByAuthor(author);
     }
 }
