@@ -39,6 +39,7 @@ public class VideoServiceImpl implements VideoService {
     public VideoInfo createVideo(MultipartFile video) throws IOException {
 
         if(validationFile.validationFileAlreadyExist(video)){
+            log.error("Error: Video is already exist!");
             throw new DuplicateVideoException("Video is already exist!");
         }
 
