@@ -21,7 +21,6 @@ public class AdminServiceImpl implements AdminService {
                         VideoInfoDto.builder()
                                 .author(videoInfo.getAuthor())
                                 .videoName(videoInfo.getVideoName())
-                           //     .percentUpload()
                                 .build())
                 .toList();
     }
