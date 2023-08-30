@@ -12,4 +12,6 @@ public interface FileUtil {
     String getFileName(MultipartFile file);
 
     String getFileExtension(MultipartFile file);
+
+
 }
