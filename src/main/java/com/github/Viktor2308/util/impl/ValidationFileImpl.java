@@ -12,7 +12,6 @@ public class ValidationFileImpl implements ValidationFile {
 
     private final VideoInfoRepository videoInfoRepository;
 
-
     @Override
     public boolean validationFileAlreadyExist(MultipartFile file) {
         long fileSize = file.getSize();
